@@ -70,7 +70,12 @@ module AjaxfulRating # :nodoc:
       end
       # When using rails_xss plugin, it needs to render as HTML
       stars = "".respond_to?(:html_safe) ? stars.join.html_safe : stars.join
-      @template.content_tag(:ul, stars, :class => "ajaxful-rating#{' small' if options[:small]}")
+      if options[:list_class].present?
+        list_class = "  #{(options[:list_class].is_a?(Array) ? options[:list_class].join(' ') : options[:list_class])}"
+      else
+        list_class = ''
+      end
+      @template.content_tag(:ul, stars, :class => "ajaxful-rating#{' small' if options[:small]}#{list_class}")
     end
     
     def star_tag(value)
@@ -97,6 +102,8 @@ module AjaxfulRating # :nodoc:
         :small => options[:small],
         :show_user_rating => options[:show_user_rating]
       }.to_query
+      css_class << ' ' << options[:star_class] if options[:star_class]
+      css_class.strip!
       config = {
         :html => {
           :class => css_class,
@@ -107,6 +114,7 @@ module AjaxfulRating # :nodoc:
       }
       if options[:disable_remote]
         config[:url] += "?" + query
+        config[:html]['data-stars'] = value
         @template.link_to(value, config[:url], config[:html])
       else
         @template.link_to_remote(value, remote_options.merge(config))
